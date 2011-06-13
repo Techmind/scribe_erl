@@ -17,7 +17,7 @@
 %% External exports
 %% --------------------------------------------------------------------
 
--export([start/1, add/1, getStatus/0]).
+-export([start/1, add/1, add/2, getStatus/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -34,6 +34,9 @@ start(Config) ->
 
 add(Msg) ->
     gen_server:call(?MODULE, Msg).
+
+add(Category, Message) ->
+    gen_server:call(?MODULE, #logMessage{category = Category, message = Message}).
 
 getStatus() ->
     gen_server:call(?MODULE, status).
