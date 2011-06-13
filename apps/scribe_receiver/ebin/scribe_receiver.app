@@ -1,0 +1,9 @@
+{application,scribe_receiver,
+             [{description,[]},
+              {vsn,"1"},
+              {registered,[]},
+              {applications,[kernel,stdlib]},
+              {mod,{scribe_receiver_app,[]}},
+              {env,[]},
+              {modules,[external_store,external_store_file,receiver,
+                        scribe_receiver_app,scribe_receiver_sup,storager]}]}.
