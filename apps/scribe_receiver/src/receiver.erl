@@ -51,7 +51,7 @@ getStatus() ->
 %%          ignore               |
 %%          {stop, Reason}
 %% --------------------------------------------------------------------
-init([Config]) ->	
+init(Config) ->	
     {ok, #state{config=Config,status=alive}}.
 
 %% --------------------------------------------------------------------
@@ -69,7 +69,7 @@ handle_call(status, _, #state{status = Status} = State) ->
 
 handle_call(#logMessage{category = Category, message = Message}, _, State) ->
     {ok, State} = storager:findStore(Category),
-	Code = storager:store(State, Message),
+	ok = storager:store(State, Message),
 	{reply, #receiverReply{code=Code}, State};
 
 
