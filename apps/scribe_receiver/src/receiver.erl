@@ -69,7 +69,7 @@ handle_call(status, _, #state{status = Status} = State) ->
 
 handle_call(#logMessage{category = Category, message = Message}, _, State) ->
     {ok, State} = storager:findStore(Category),
-	ok = storager:store(State, Message),
+	Code = storager:store(State, Message),
 	{reply, #receiverReply{code=Code}, State};
 
 
