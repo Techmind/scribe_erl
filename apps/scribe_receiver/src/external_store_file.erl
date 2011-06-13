@@ -25,13 +25,13 @@ init(Props) ->
   {ok, #state{fileRef = FileRef}}.
 
 %% [TODO]
-get(StoreState) ->
+get(_StoreState) ->
   [].
 
 store(#state{fileRef = FileRef}, Message) ->
   ok = file:write(FileRef, Message ++ "\n"),
   ok.
 
-destroy(StoreState) ->
+destroy(_StoreState) ->
   ok.
 

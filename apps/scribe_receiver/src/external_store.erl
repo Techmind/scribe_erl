@@ -33,7 +33,7 @@ behaviour_info(_Other) ->
 
 
 init(Type, Props) ->  
-  Mod = list_to_atom("external_store_" ++ Type),
+  Mod = list_to_atom("external_store_" ++ atom_to_list(Type)),
   case Mod:init(Props) of
     {ok, SState} -> #storeState{store_module = Mod, state = SState};
     _ -> error 
