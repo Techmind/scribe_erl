@@ -76,7 +76,7 @@ handle_call(#logMessage{category = Category, message = Message}, _, State) ->
 	{reply, #receiverReply{code=Code}, State};
 
 
-handle_call(Request, _From, State) ->
+handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
 
