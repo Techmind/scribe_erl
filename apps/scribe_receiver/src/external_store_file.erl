@@ -28,8 +28,8 @@ init(Props) ->
 get(_StoreState) ->
   [].
 
-store(#state{fileRef = FileRef}, Message) ->
-  ok = file:write(FileRef, Message ++ "\n"),
+store(#state{fileRef = FileRef}, Stream) ->
+  ok = file:write(FileRef, Stream),
   ok.
 
 destroy(_StoreState) ->

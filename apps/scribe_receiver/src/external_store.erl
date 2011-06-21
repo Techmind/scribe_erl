@@ -42,8 +42,8 @@ init(Type, Props) ->
 get(#storeState{store_module = Mod, state = StoreState}) ->
   Mod:get(StoreState).
 
-store(#storeState{store_module = Mod, state = StoreState}, Message) ->
-  Mod:store(StoreState, Message).
+store(#storeState{store_module = Mod, state = StoreState}, Stream) ->
+  Mod:store(StoreState, Stream).
 
 destroy(#storeState{store_module = Mod, state = StoreState}) ->
   Mod:destroy(StoreState).

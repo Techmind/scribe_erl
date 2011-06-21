@@ -24,8 +24,9 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-	ReceiverChildSpec = {receiver_sup_id, {receiver, start, []}, permanent, 5000, worker, [receiver]},
-    StoragerChildSpec = {collector_sup_id, {storager, start, []}, permanent, 5000, worker, [storager]},
-	
-    {ok, { {one_for_one, 5, 10}, [ReceiverChildSpec, StoragerChildSpec]} }.
+	Config = [],
+	ReceiverChildSpec = {receiver_sup_id, {receiver, start, [Config]}, permanent, 5000, worker, [receiver]},
+    StoragerChildSpec = {storager, {storager, start, [Config]}, permanent, 5000, worker, [storager]},
+    
+	{ok, { {one_for_one, 5, 10}, [ReceiverChildSpec, StoragerChildSpec]} }.
 
