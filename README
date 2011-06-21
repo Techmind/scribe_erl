@@ -1,1 +1,10 @@
 An exercise to rewrite facebook's scribe demon in erlang.
+
+// [TODO]
+
+1) make demo app
+2) add thrift support
+3) make distributable backend
+4) make script for config converting
+5) test with original scribe
+6) add gzip support
