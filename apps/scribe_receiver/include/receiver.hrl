@@ -1,5 +1,5 @@
--ifndef(_hadoopfs_types_included).
--define(_hadoopfs_types_included, yeah).
+-ifndef(_receiver_included).
+-define(_receiver_included, yeah).
 
 -record(logMessage, {category, message}).
 

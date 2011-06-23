@@ -7,6 +7,12 @@
 -module(external_store).
 
 %% --------------------------------------------------------------------
+%% Include files
+%% --------------------------------------------------------------------
+
+-include("../include/external_store.hrl").
+
+%% --------------------------------------------------------------------
 %% External exports
 %% --------------------------------------------------------------------
 
@@ -18,7 +24,7 @@
          destroy/1
         ]).
 
--record(storeState, {state, store_module}).
+-record(storeState, {state, store_module, storeConfig}).
 
 %% ====================================================================
 %% External functions
@@ -35,7 +41,13 @@ behaviour_info(_Other) ->
 init(Type, Props) ->  
   Mod = list_to_atom("external_store_" ++ atom_to_list(Type)),
   case Mod:init(Props) of
-    {ok, SState} -> {ok, #storeState{store_module = Mod, state = SState}};
+    {ok, SState} ->
+	              {ok, 
+                    #storeState{
+                      store_module = Mod, 
+                      state = SState
+                    }
+                  };
     _ -> error 
   end.
 
@@ -47,3 +59,5 @@ store(#storeState{store_module = Mod, state = StoreState}, Stream) ->
 
 destroy(#storeState{store_module = Mod, state = StoreState}) ->
   Mod:destroy(StoreState).
+
+%% check for rotation
