@@ -24,7 +24,7 @@
 
 %%statuses = dead,statring,alive,stopping,stopped,warning
 
--record(state, {config,status=alive}).
+-record(state, {config,status=alive,stores=[]}).
 
 %% ====================================================================
 %% External functions
@@ -37,6 +37,9 @@ add(Msg) ->
 
 add(Category, Message) ->
     gen_server:call(?MODULE, #logMessage{category = Category, message = Message}).
+
+%%register(Pid) ->
+%%   gen_server:call(?MODULE, {register, Pid}).
 
 getStatus() ->
     gen_server:call(?MODULE, status).
@@ -70,9 +73,15 @@ init(Config) ->
 handle_call(status, _, #state{status = Status} = State) ->
     {reply, #receiverReply{response=Status}, State};
 
+%%handle_call({register, Pid}, _, #state{} = State) ->
+%%    NewState = registerStore(State, Pid),
+%%    
+%%    {reply, #receiverReply{response=ok}, NewState};
+
 handle_call(#logMessage{category = Category, message = Message}, _, State) ->
-    {ok, State} = storager:findStore(Category),
-	Code = storager:store(State, Message),
+  %%  {ok, State} = storager:findStore(Category),
+	%% Send Messages to all stores
+  Code = storager:store(State, Message),
 	{reply, #receiverReply{code=Code}, State};
 
 
@@ -120,3 +129,5 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %% --------------------------------------------------------------------
 
+%%registerStore(#state{stores = Stores} = State, Pid) ->
+%%  State#state{stores = [Pid | Stores]}.

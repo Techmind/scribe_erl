@@ -4,7 +4,8 @@ An exercise to rewrite facebook's scribe demon in erlang.
 
 * make app
 ++ make demo app
-** copy file storage write implemetation
++* copy file storage write implemetation
+** add store queues fan out to store files
 ** add stream reading support
 # ** add erlang configs
 * add thrift support

@@ -13,14 +13,12 @@
 
 %% --------------------------------------------------------------------
 %% External exports
--export([start/1, findStore/1, store/3, findAndStore/2]).
+-export([start/1, store/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
--record(state, {stores = []}).
--record(config, {writeCategory=true, addNewlines=true, paddingChunkSize=1024, maxFileSize=1024024}).
--record(storage, {state, category, config}).
+-record(state, {storePids = []}).
 
 %% ====================================================================
 %% External functions
@@ -28,16 +26,9 @@
 start(Config) ->
 	gen_server:start_link({local, ?MODULE}, ?MODULE, Config, []).
 
-findStore(Category) ->
-	gen_server:call(?MODULE, {find_store, Category}).
+store(Category, Message) ->
+	gen_server:call(?MODULE, {store, Category, Message}).
 
-store(Store, Category, Message) ->
-	gen_server:call(?MODULE, {store, Store, Category, Message}).
-
-findAndStore(Category, Message) ->
-	{ok, FirstStore} = findStore(Category),
-	store(FirstStore, Category, Message).
-	
 
 %% ====================================================================
 %% Server functions
@@ -53,7 +44,7 @@ findAndStore(Category, Message) ->
 %% --------------------------------------------------------------------
 init(Config) ->
 	Stores = init_stores(Config),
-    {ok, #state{stores = Stores}}.
+  {ok, #state{storePids = Stores}}.
 
 %% --------------------------------------------------------------------
 %% Function: handle_call/3
@@ -65,14 +56,10 @@ init(Config) ->
 %%          {stop, Reason, Reply, State}   | (terminate/2 is called)
 %%          {stop, Reason, State}            (terminate/2 is called)
 %% --------------------------------------------------------------------
-handle_call({find_store, _Category}, _, #state{stores = [FirstStore | _]} = State) ->
-    {reply, {ok, FirstStore}, State};
-
-handle_call({store, FirstStore, Category, Message}, _, State) ->
-	#storage{state = StoreState, config = Config} = FirstStore,
-	[_StreamLength, Stream] = makeStream(Config, Category, Message),
-	Code = external_store:store(StoreState, Stream),
-    {reply, {Code}, State}.
+handle_call({store, Category, Message}, _, #state{storePids = StorePids} = State) ->
+  _Replies = lists:foreach(fun(Pid) -> external_store:store(Pid, Category, Message ) end, 
+                           StorePids),
+  {reply, ok, State}.
 
 %% --------------------------------------------------------------------
 %% Function: handle_cast/2
@@ -115,37 +102,18 @@ code_change(_OldVsn, State, _Extra) ->
 %% --------------------------------------------------------------------
 
 init_stores(_Config) ->
-	{ok, State} = external_store:init(file, [{path, "/tmp/file"}]),
-	StoreConfig = #config{paddingChunkSize = 10240},
-	[#storage{state=State, category=default, config=StoreConfig}].
-
-makeStream(Config, Category, Message) ->
-  makeStream(Config, Category, Message, 0).
-
-makeStream(#config{writeCategory=WriteCategory, addNewlines=AddNewLines, paddingChunkSize=PaddingChunkSize, maxFileSize=MaxFileSize} = Config, Category, Message, Length) ->
-	MessageSize = byte_size(Message),
-	MessageFrameIoList = [<<MessageSize:4/big-unsigned-integer-unit:8>>, Message],
-	[CategoryFrameIoList, CategoryFrameSize] 
-		= if 
-			WriteCategory == true ->
-				CategorySize = byte_size(Category),
-				[[<<CategorySize:4/big-unsigned-integer-unit:8>>, Category, <<10>>], CategorySize + 5]; 
-			true -> [[], 0] 
-		end,
-	[NewLineIoSize, NewLineIoList] = if AddNewLines == true -> [1,<<10>>]; true -> [0, undefined] end,
-	LengthBeforePadding = CategoryFrameSize + 4 + MessageSize + NewLineIoSize,
-	[Padding, PaddingLength] = pad(PaddingChunkSize, Length, LengthBeforePadding),
-	[_FullLength = PaddingLength + LengthBeforePadding,  [Padding, CategoryFrameIoList, MessageFrameIoList, NewLineIoList]].
-
-pad(PaddingChunkSize, LengthLeft, MessageSize) ->
-	Padding = if 
-				PaddingChunkSize > 0 ->
-					SpaceLeftInChunk 
-									 = ((PaddingChunkSize - LengthLeft) rem PaddingChunkSize)*8,
-					if 
-						MessageSize > SpaceLeftInChunk -> SpaceLeftInChunk;
-						true -> 0
-					end;
-				true -> 0 
-				end,
-	[<<0:Padding/big-unsigned-integer-unit:8>>, Padding].
+  PropsArray = [
+                [{type, "file"}, {category="default"}],
+                [{type, "file"}, {category="1"}]
+  ],  
+  States = lists:foreach(fun(Config) -> external_store:start(Config) end, PropsArray),
+  Pids = lists:foldl(
+           fun(Elem, PidsList) -> 
+             case Elem of 
+                 {ok, Pid} -> [Pid | PidsList];
+                              
+                 _ -> PidsList
+             end
+           end
+           , [], States),
+	#state{storePids = Pids}.
